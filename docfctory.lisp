@@ -9,17 +9,11 @@
 ;; Global vars
 
 
-(defparameter *workdir*       "c:\\Users\\cselovszkid\\Downloads\\2024.04.01. TKig Gazdvez kinevmód\\")
-(defparameter *control-book*  (concatenate 'string *workdir* "Illetményváltozás_TK_complete.xlsx"))
-(defparameter *outdir*        (concatenate 'string *workdir* "out\\"))
-
-#|(defparameter *doc-template*  (concatenate 'string *workdir* "Kinevezésmódosítás_tankerületi igazgató.docx"))
-(defparameter *control-sheet* "Tankerületi igazgatók")
-(defparameter *filename-col*  16)|#
-
-(defparameter *doc-template*  (concatenate 'string *workdir* "Kinevezésmódosítás_gazdasági vezetõ.docx"))
-(defparameter *control-sheet* "Gazdasági vezetõk")
-(defparameter *filename-col*  16)
+(defparameter *control-book*  nil)
+(defparameter *outdir*        nil)
+(defparameter *doc-template*  nil)
+(defparameter *control-sheet* nil)
+(defparameter *filename-col*  nil)
 
 (defparameter *previous-workbook* "")
 (defparameter *outdir-selected*   "")
@@ -90,20 +84,30 @@
 ;;; Set global variables from GUI.
 (defun init ()
   (setf *previous-workbook* ""
-        *outdir-selected*   "")
-  )
+        *outdir-selected*   ""))
 
 
 ;;; Initialize and run the main fn.
 (defun run (interface)
-  (declare (ignore interface))
-  (docfctory)
-  )
+  (let ((sheet  (capi:choice-selection (worksheet-pane interface)))
+        (sheets (capi:collection-items (worksheet-pane interface)))
+        (column (capi:choice-selection (out-filename interface))))
+    (setf *control-book*  (capi:text-input-pane-text (workbook-pane interface))
+          *outdir*        (capi:text-input-pane-text (out-directory interface))
+          *doc-template*  (capi:text-input-pane-text (doc-template interface))
+          *control-sheet* (elt sheets sheet)
+          *filename-col*  column)
+    (print *control-book*)
+    (print *control-sheet*)
+    (print *outdir*)
+    (print *filename-col*)
+    (print *doc-template*)
+    (docfctory)))
+
 
 
 ;;; Exit (might be important with multiple running instances).
-(defun exit-program ()
-  )
+(defun exit-program () )
 
 
 ;; ----------------------------------------------------------------------
@@ -136,9 +140,13 @@
               (capi:collection-items (worksheet-pane interface))
               (list-of-worksheets text))
         (worksheet-changed nil interface)
-        ;; If output dir isn't selected yet, give it a value.
+        ;; If output dir isn't selected yet, initialize it and doc-template.
         (when (string= *outdir-selected* "")
+          ;; Initialize output-dir.
           (setf (capi:text-input-pane-text (out-directory interface))
+                (file-directory text)
+                ;; Initialize doc-template.
+                (capi:text-input-pane-text (doc-template interface))
                 (file-directory text)
                 *outdir-selected* (file-directory text))))
       ;; If the selected file is of another type, empty two panes.
@@ -206,6 +214,15 @@
     :title "Kimeneti fájlnév oszlop"
     :items '("")
     )
+   (doc-template
+    capi:text-input-pane
+    :title "Dokumentumsablon"
+    :text (namestring (system:get-folder-path :my-documents))
+    :accessor doc-template
+    :buttons `(:browse-file (:filter   "*.docx"
+                             :filters  ("Word dokumentumok" "*.docx"
+                                        "Minden fájl"      "*.*"))
+               :ok          nil))
    (out-directory
     capi:text-input-pane
     :title "Kimeneti mappa"
@@ -222,9 +239,9 @@
   (:layouts
    (default
     capi:column-layout
-    '(workbook-pane worksheet-pane out-filename out-directory start-button)))
+    '(workbook-pane worksheet-pane out-filename doc-template out-directory start-button)))
   (:default-initargs
-   :title "docfctory v0.02"
+   :title "docfctory v0.03"
    :destroy-callback 'exit-program
    :initial-focus 'workbook-pane
    :best-width 450
