@@ -62,20 +62,21 @@
          (items    (capi:collection-items (worksheet-pane interface)))
          (filename (capi:text-input-pane-text (workbook-pane interface))))
     ;; Extract LABELS from the first row of selected workbook/worksheet.
-    (cclet* ((sheets  #p(worksheets (get-document filename)))
-             (sheet   #p(item sheets (elt items item)))
-             (whole   #p(cells sheet))
-             (top     #p(row #p(end whole +xl-up+)))
-             (left    #p(column #p(end whole +xl-to-left+)))
-             (from    (range sheet left top))
-             (right   #p(column #m(find whole "*" from +xl-values+
-                                        +xl-whole+ +xl-by-columns+ +xl-previous+)))
-             (header  #p(value2 (range sheet 1 1 right 1)))
-             (strings (loop for c from 0 below right collecting
-                            (aref header 0 c))))
-      ;; Populate the OUT-FILENAME pane's list of items with the header strings.
-      (setf (capi:collection-items (out-filename interface))
-            strings))))
+    (with-com-initialized
+      (cclet* ((sheets  #p(worksheets (get-document filename)))
+               (sheet   #p(item sheets (elt items item)))
+               (whole   #p(cells sheet))
+               (top     #p(row #p(end whole +xl-up+)))
+               (left    #p(column #p(end whole +xl-to-left+)))
+               (from    (range sheet left top))
+               (right   #p(column #m(find whole "*" from +xl-values+
+                                          +xl-whole+ +xl-by-columns+ +xl-previous+)))
+               (header  #p(value2 (range sheet 1 1 right 1)))
+               (strings (loop for c from 0 below right collecting
+                              (aref header 0 c))))
+        ;; Populate the OUT-FILENAME pane's list of items with the header strings.
+        (setf (capi:collection-items (out-filename interface))
+              strings)))))
 
 
 ;;; Extract contents of all fields on the main interface.
@@ -114,19 +115,18 @@
             (list "A kiválasztott vezérlõ táblázat nem található."
                   "A kiválasztott dokumentumsablon nem található."
                   "A kiválasztott kimeneti mappa nem található."))
-      (print "This shouldn't run!")
-      (cclet* ((sheets #p(worksheets (get-document control-book)))
-               (sheet  #p(item sheets control-sheet)))
-        (validate sheet #'identity "A kiválasztott vezérlõ munkalap nem található.")
-        ;; Everything is valid:
-        t))))
+      (with-com-initialized
+        (cclet* ((sheets #p(worksheets (get-document control-book)))
+                 (sheet  #p(item sheets control-sheet)))
+          (validate sheet #'identity "A kiválasztott vezérlõ munkalap nem található.")
+          ;; Everything is valid:
+          t)))))
 
 
 ;;; Callback fn for START-BUTTON: initialize global vars and run the main fn.
 (defun run (interface)
   (multiple-value-bind (control-book control-sheet filename-column doc-template outdir pdf-out)
       (extract-mainif-fields interface)
-    (format t "_~a  _~a  _~a  _~a  _~a  _~a~%" control-book control-sheet filename-column doc-template outdir pdf-out)
     ;; Validate some data before starting.
     (when (validate-and-signal-mainif control-book control-sheet doc-template outdir)
       ;; Set up global vars.
@@ -135,6 +135,10 @@
             (*pdf-out*      pdf-out))
         ;; Start the process.
         (docfctory control-book control-sheet filename-column)))))
+
+
+;;; Exit (might be important with multiple running instances).
+(defun exit-program () )
 
 
 ;;; Main GUI.
@@ -210,7 +214,7 @@
     capi:column-layout
     '(workbook-pane worksheet-pane out-filename doc-template out-directory pdf-out start-button)))
   (:default-initargs
-   :title "docfctory v0.04"
+   :title "docfctory v0.05"
    :destroy-callback 'exit-program
    :initial-focus 'workbook-pane
    :best-width 450
@@ -224,11 +228,23 @@
         *outdir-selected*   ""))
 
 
-;;; Exit (might be important with multiple running instances).
-(defun exit-program () )
+;;; Check if application is registered.
+(defun verify-app-present (app-progid app-name)
+  (with-com-initialized
+    (handler-case
+        (com:create-object :progid app-progid)
+      (error (e) (progn
+                   (error-message-and-wait (format nil "~a alkalmazás nem található." app-name))
+                   nil)))))
 
 
 ;;; Start the GUI.
 (defun start ()
-  (init)
-  (capi:display (make-instance 'main)))
+  ;; Check if Word and Excel is registered.
+  (and (verify-app-present "Excel.Application" "Excel")
+       (verify-app-present "Word.Application" "Word"))
+    ;; Initialize some global vars.
+    (progn
+      (init)
+      ;; Start main GUI.
+      (capi:display (make-instance 'main))))

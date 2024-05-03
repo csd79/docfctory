@@ -19,12 +19,11 @@
 
 ;;; Get the contents of the controlling spreadsheet.
 (defun control-data (filename sheetname)
-  (with-com-initialized
-    (cclet* ((workbook   (get-document filename))
-             (worksheets #p(worksheets workbook))
-             (worksheet  #p(item worksheets sheetname))
-             (range      (used-range worksheet)))
-      #p(value2 range))))
+  (cclet* ((workbook   (get-document filename))
+           (worksheets #p(worksheets workbook))
+           (worksheet  #p(item worksheets sheetname))
+           (range      (used-range worksheet)))
+    #p(value2 range)))
 
 
 ;;; Return a single row of ARRAY.
@@ -68,9 +67,10 @@
 
 ;;; Main functionality.
 (defun docfctory (control-book control-sheet filename-column)
-  (let* ((control  (control-data control-book control-sheet))
-         (last-row (array-dimension control 0)))
-    (cclet* ((documents #p(documents (com:create-object :progid "Word.Application"))))
-      (loop for row from 1 below last-row
-            for doc-control = (extract-row control row)
-            doing (print (document doc-control filename-column documents))))))
+  (with-com-initialized
+    (let* ((control  (control-data control-book control-sheet))
+           (last-row (array-dimension control 0)))
+      (cclet* ((documents #p(documents (com:create-object :progid "Word.Application"))))
+        (loop for row from 1 below last-row
+              for doc-control = (extract-row control row)
+              doing (print (document doc-control filename-column documents)))))))

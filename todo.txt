@@ -1,7 +1,3 @@
-Előzetes ellenőrzések:
-van excel?
-van word?
-
 Menet közben:
 legyen progress bar
 felette írja ki egy kis konzolmezőbe hogy mit ment éppen (docx és pdf)
