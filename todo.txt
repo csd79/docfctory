@@ -1,0 +1,10 @@
+Előzetes ellenőrzések:
+van excel?
+van word?
+
+Menet közben:
+legyen progress bar
+felette írja ki egy kis konzolmezőbe hogy mit ment éppen (docx és pdf)
+ellenőrizze hogy a kimeneti fájnév érvényes-e?
+
+és persze forduljon le

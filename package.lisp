@@ -6,14 +6,4 @@
 
 (defpackage #:docfctory
   (:use #:cl #:ccom)
-#|  (:export #:#<
-           #:#>
-           #:cclet*
-           #:cell-index
-           #:with-com-initialized
-           #:get-document
-           #:open-worksheets
-           #:range
-           #:used-range
-           #:copy-formatting))|#
-)
+  (:export #:start))
