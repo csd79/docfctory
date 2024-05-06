@@ -133,8 +133,8 @@
       (let ((*outdir*       outdir)
             (*doc-template* doc-template)
             (*pdf-out*      pdf-out))
-        ;; Start the process.
-        (docfctory control-book control-sheet filename-column)))))
+        ;; Call progress GUI.
+        (run-progress control-book control-sheet filename-column)))))
 
 
 ;;; Exit (might be important with multiple running instances).
@@ -214,7 +214,7 @@
     capi:column-layout
     '(workbook-pane worksheet-pane out-filename doc-template out-directory pdf-out start-button)))
   (:default-initargs
-   :title "docfctory v0.05"
+   :title "docfctory v0.06"
    :destroy-callback 'exit-program
    :initial-focus 'workbook-pane
    :best-width 450

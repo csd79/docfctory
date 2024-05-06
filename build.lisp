@@ -6,16 +6,16 @@
 
 (asdf:load-system "docfctory")
 
-;(setf snewper::*independent-exe* t)
 (lw:deliver 'docfctory:start
     "c:\\Users\\cselovszkid\\common-lisp\\docfctory\\docfctory.exe"
-    1
+    5
     :interface :capi
     :console :io
     :multiprocessing t
-    :icon-file "c:\\Users\\cselovszkid\\common-lisp\\docfctory\\docfctory.ico"
+    :icon-file "c:\\Users\\cselovszkid\\common-lisp\\docfctory\\Gutenberg.ico"
     :error-on-interpreted-functions t
     :keep-eval t
     :keep-lisp-reader t
     :symbol-names-action nil
-    :startup-bitmap-file nil)
+    :startup-bitmap-file nil
+    :kill-dspec-table nil)
