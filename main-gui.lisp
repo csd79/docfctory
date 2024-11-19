@@ -214,7 +214,7 @@
     capi:column-layout
     '(workbook-pane worksheet-pane out-filename doc-template out-directory pdf-out start-button)))
   (:default-initargs
-   :title "docfctory v0.06"
+   :title "docfctory v0.07"
    :destroy-callback 'exit-program
    :initial-focus 'workbook-pane
    :best-width 450
