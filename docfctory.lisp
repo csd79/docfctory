@@ -16,14 +16,20 @@
 ;; ----------------------------------------------------------------------
 ;; Operation
 
+(defun get-document (fullname)
+  (com::get-object fullname :riid 'com::i-dispatch))
+
 
 ;;; Get the contents of the controlling spreadsheet.
 (defun control-data (filename sheetname)
   (cclet* ((workbook   (get-document filename))
-           (worksheets #p(worksheets workbook))
-           (worksheet  #p(item worksheets sheetname))
+;           (worksheets ?('worksheets workbook))
+;           (worksheet  ?('item worksheets sheetname))
+           (worksheets (?worksheets workbook))
+           (worksheet  (?item worksheets sheetname))
            (range      (used-range worksheet)))
-    #p(value2 range)))
+;    ?('value2 range)))
+    (?value2 range)))
 
 
 ;;; Return a single row of ARRAY.
@@ -41,7 +47,7 @@
 
 ;;; Replace text in Word doc.
 (defun word-replace-text (find orig-text new-text)
-  #m(execute find orig-text nil nil nil nil nil t +wd-find-continue+ nil new-text))
+  (!execute find orig-text nil nil nil nil nil t +wd-find-continue+ nil new-text))
 
 
 ;;; Non-permitted characters in a file name.
@@ -77,22 +83,49 @@
          (outfile-pdf  (concatenate 'string outfile-raw ".pdf")))
     ;; If OUTFILE-DOCX is a valid filename:
     (when (validate-outfile outfile-docx dump-text)
-      (cclet* ((document  #m(open documents *doc-template*))
-               (find      #p(find #p(content document))))
+      (cclet* ((document  (!open documents *doc-template*))
+;               (find      ?('find ?('content document))))
+               (find      (?find (?content document))))
         ;; Loop over the columns of the control array, perform replace operations in the document content.
         (loop for col from 0 below (array-dimension control 0) doing
               (word-replace-text find 
-                                 (format nil "<~a>" (ccom:column (1+ col)))
+;                                 (format nil "<~a>" (ccom:column (1+ col)))
+                                 (format nil "<~a>" (column (1+ col)))
                                  (aref control col)))
+
+; C:\Users\cselovszkid\docfctory\Szombathelyi_TK_köznevelési intézmények_ell.xlsx
+        ;; Loop over shapes
+;        (cclet* ((shapes ?('shapes document))
+;                 (scount ?('count shapes)))
+        (cclet* ((shapes (?shapes document))
+                 (scount (?count shapes)))
+          (loop for i from 1 upto scount doing
+                (cclet* ((shape (!item shapes i))
+#|                         (frame ?('textframe shape))
+                         (has   ?('hastext frame))
+                         (range (unless (zerop has) ?('textrange frame)))
+                         (find  (when range ?('find range))))|#
+                         (frame (?textframe shape))
+                         (has   (?hastext frame))
+                         (range (unless (zerop has) (?textrange frame)))
+                         (find  (when range (?find range))))
+                  (when find
+                    (loop for col from 0 below (array-dimension control 0) doing
+                          (word-replace-text find 
+;                                             (format nil "<~a>" (ccom:column (1+ col)))
+                                             (format nil "<~a>" (column (1+ col)))
+                                             (aref control col)))))))
+
+        
         ;; Save resulting document with new name as DOCX.
-        #m(saveas2 document outfile-docx)
+        (!saveas2 document outfile-docx)
         (funcall dump-text (format nil "~a elmentve.~%" outfile-docx))
         ;; Also save it as PDF, if needed.
         (when *pdf-out*
-          #m(saveas2 document outfile-pdf +wd-format-pdf+)
+          (!saveas2 document outfile-pdf +wd-format-pdf+)
           (funcall dump-text (format nil "~a elmentve.~%" outfile-pdf)))
         ;; Close modified template.
-        #m(close document nil)
+        (!close document nil)
         ;; Signal to the caller that validation passed.
         t))))
 
@@ -103,7 +136,8 @@
     (let* ((control  (control-data control-book control-sheet))
            (last-row (array-dimension control 0)))
       ;; Create a Word object (to speed up processing.
-      (cclet* ((documents   #p(documents (com:create-object :progid "Word.Application")))
+;      (cclet* ((documents   ?('documents (com:create-object :progid "Word.Application")))
+      (cclet* ((documents   (?documents (com:create-object :progid "Word.Application")))
                (error-count 0))
         ;; Loop over rows of the control array.
         (loop for row from 1 below last-row

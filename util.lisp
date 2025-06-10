@@ -10,10 +10,13 @@
 
 ;;; Extract a list of worksheet names from az Excel workbook.
 (defun list-of-worksheets (filename)
-  (cclet* ((sheets #p(worksheets (get-document filename)))
-           (count  #p(count sheets)))
+;  (cclet* ((sheets ?('worksheets (get-document filename)))
+;           (count  ?('count sheets)))
+  (cclet* ((sheets (?worksheets (get-document filename)))
+           (count  (?count sheets)))
     (loop for i from 1 upto count collecting
-          #p(name #p(item sheets i)))))
+;          ?('name ?('item sheets i)))))
+          (?name (?item sheets i)))))
 
 
 ;;; Extract the device/path part of a full pathname.

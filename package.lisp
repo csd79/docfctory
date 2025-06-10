@@ -5,5 +5,5 @@
 
 
 (defpackage #:docfctory
-  (:use #:cl #:ccom)
+  (:use #:cl #:ccom3 #:msoffice)
   (:export #:start))

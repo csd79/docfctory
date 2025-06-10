@@ -2,7 +2,7 @@
   :description "Generate documents from control data in an XLSX"
   :author      "Denes Cselovszki <denes.cselovszki@gmail.com>"
   :version     "0.08"
-  :depends-on  ("ccom")
+  :depends-on  ("ccom3" "msoffice")
   :serial      t
   :components  ((:file "package")
                 (:file "fli-templates")

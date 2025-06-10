@@ -64,5 +64,7 @@
     ;; Show progress GUI.
     (capi:display progress-gui)
     ;; Start process.
-    (docfctory control-book control-sheet filename-column
-               #'dump-text (progress-bar-changer progress-gui))))
+    (with-property-accessors
+      (setf (property-accessors-on) t)
+      (docfctory control-book control-sheet filename-column
+                 #'dump-text (progress-bar-changer progress-gui)))))
