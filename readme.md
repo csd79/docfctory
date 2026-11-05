@@ -2,7 +2,7 @@
 
 Egyszerű körlevélkészítő
 
-![Gootenberg](img/Gutenberg.png){width=160}
+![Gootenberg](img/Gutenberg.png)
 
 A program működéséhez Windows operációs rendszer és a MS Excel és Word alkalmazások megléte szükséges. Tesztelve 64-bites Windows 10 és 11 rendszeren, Office 2016-tal.
 
