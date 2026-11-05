@@ -3,6 +3,8 @@
 
 (in-package #:docfctory)
 (require "shell-objs")
+#.(enable-ccom-syntax)
+
 
 
 ;; ----------------------------------------------------------------------
@@ -20,32 +22,30 @@
 ;;; Callback fn for whenever WORKBOOK-PANE is set.
 (defun workbook-changed (interface)
   ;; Pathname string of the selected file.
-  (with-property-accessors
-    (setf (property-accessors-on) t)
-    (let ((text (capi:text-input-pane-text (workbook-pane interface))))
-      (if (string-equal (pathname-type text) "xlsx")
-        ;; If the selected file is an '.xlsx':
-        (unless (string-equal text *previous-workbook*)
-          ;; If it is different from the previously selected '.xlsx'
-          (setf *previous-workbook* text
-                ;; Populate the worksheet selection pane with worksheet names.
-                (capi:collection-items (worksheet-pane interface))
-                (list-of-worksheets text))
-          (worksheet-changed nil interface)
-          ;; If output dir isn't selected yet, initialize it and doc-template.
-          (when (string= *outdir-selected* "")
-            ;; Initialize output-dir.
-            (setf (capi:text-input-pane-text (out-directory interface))
-                  (file-directory text)
-                  ;; Initialize doc-template.
-                  (capi:text-input-pane-text (doc-template interface))
-                  (file-directory text)
-                  *outdir-selected* (file-directory text))))
-        ;; If the selected file is of another type, empty two panes.
-        (setf (capi:collection-items (worksheet-pane interface))
-              '()
-              (capi:collection-items (out-filename interface))
-              '())))))
+  (let ((text (capi:text-input-pane-text (workbook-pane interface))))
+    (if (string-equal (pathname-type text) "xlsx")
+      ;; If the selected file is an '.xlsx':
+      (unless (string-equal text *previous-workbook*)
+        ;; If it is different from the previously selected '.xlsx'
+        (setf *previous-workbook* text
+              ;; Populate the worksheet selection pane with worksheet names.
+              (capi:collection-items (worksheet-pane interface))
+              (list-of-worksheets text))
+        (worksheet-changed nil interface)
+        ;; If output dir isn't selected yet, initialize it and doc-template.
+        (when (string= *outdir-selected* "")
+          ;; Initialize output-dir.
+          (setf (capi:text-input-pane-text (out-directory interface))
+                (file-directory text)
+                ;; Initialize doc-template.
+                (capi:text-input-pane-text (doc-template interface))
+                (file-directory text)
+                *outdir-selected* (file-directory text))))
+      ;; If the selected file is of another type, empty two panes.
+      (setf (capi:collection-items (worksheet-pane interface))
+            '()
+            (capi:collection-items (out-filename interface))
+            '()))))
 
 
 (defconstant +xl-to-left+          -4159)
@@ -59,38 +59,26 @@
 ;;; Callback fn for whenever WORKSHEET-PANE is set.
 (defun worksheet-changed (text interface)
   (declare (ignore text))
-  (with-property-accessors
-    (setf (property-accessors-on) t)
-    ;; Extract the selected workbook and worksheet.
-    (let* ((item     (capi:choice-selection (worksheet-pane interface)))
-           (items    (capi:collection-items (worksheet-pane interface)))
-           (filename (capi:text-input-pane-text (workbook-pane interface))))
-      ;; Extract LABELS from the first row of selected workbook/worksheet.
-      (with-com-initialized
-#|            (cclet* ((sheets  ?('worksheets (get-document filename)))
-               (sheet   ?('item sheets (elt items item)))
-               (whole   ?('cells sheet))
-               (top     ?('row ?('end whole +xl-up+)))
-               (left    ?('column ?('end whole +xl-to-left+)))
-               (from    (range sheet left top))
-               (right   ?('column (!find whole "*" from +xl-values+
-                                          +xl-whole+ +xl-by-columns+ +xl-previous+)))
-               (header  ?('value2 (range sheet 1 1 right 1)))|#
-        (cclet* ((sheets  (?worksheets (get-document filename)))
-                 (sheet   (?item sheets (elt items item)))
-                 (whole   (?cells sheet))
-                 (top     (?row (?end whole +xl-up+)))
-                 (left    (?column (?end whole +xl-to-left+)))
-                 (from    (range sheet left top))
-                 (right   (?column (!find whole "*" from +xl-values+
-                                          +xl-whole+ +xl-by-columns+ +xl-previous+)))
-                 (header  (?value2 (range sheet 1 1 right 1)))
-                 
-                 (strings (loop for c from 0 below right collecting
-                                (aref header 0 c))))
-          ;; Populate the OUT-FILENAME pane's list of items with the header strings.
-          (setf (capi:collection-items (out-filename interface))
-                strings))))))
+  ;; Extract the selected workbook and worksheet.
+  (let* ((item     (capi:choice-selection (worksheet-pane interface)))
+         (items    (capi:collection-items (worksheet-pane interface)))
+         (filename (capi:text-input-pane-text (workbook-pane interface))))
+    ;; Extract LABELS from the first row of selected workbook/worksheet.
+    (with-ccom-context
+     (cclet* ((sheets  (?'worksheets (get-document filename)))
+              (sheet   (?'item sheets (elt items item)))
+              (whole   (?'cells sheet))
+              (top     (?'row (?'end whole +xl-up+)))
+              (left    (?'column (?'end whole +xl-to-left+)))
+              (from    (range sheet left top))
+              (right   (?'column (!'find whole "*" from +xl-values+
+                                   +xl-whole+ +xl-by-columns+ +xl-previous+)))
+              (header  (?'value2 (range sheet 1 1 right 1)))
+              (strings (loop for c from 0 below right collecting
+                             (aref header 0 c))))
+       ;; Populate the OUT-FILENAME pane's list of items with the header strings.
+       (setf (capi:collection-items (out-filename interface))
+             strings)))))
 
 
 ;;; Extract contents of all fields on the main interface.
@@ -118,27 +106,23 @@
 
 ;;; Validate each data field of the main interface (except for OUT-FILENAME and PDF-OUT).
 (defun validate-and-signal-mainif (control-book control-sheet doc-template outdir)
-  (with-property-accessors
-    (setf (property-accessors-on) t)
-    (block amiss
-      (flet ((validate (value fn error-msg)
-               (unless (funcall fn value)
-                 (error-message-and-wait error-msg)
-                 (return-from amiss nil))))
-        (mapc #'validate
-              (list control-book doc-template outdir)
-              (list #'probe-file2 #'probe-file2 #'probe-directory)
-              (list "A kiválasztott vezérlõ táblázat nem található."
-                    "A kiválasztott dokumentumsablon nem található."
-                    "A kiválasztott kimeneti mappa nem található."))
-        (with-com-initialized
-;        (cclet* ((sheets ?('worksheets (get-document control-book)))
-;                 (sheet  ?('item sheets control-sheet)))
-          (cclet* ((sheets (?worksheets (get-document control-book)))
-                   (sheet  (?item sheets control-sheet)))
-            (validate sheet #'identity "A kiválasztott vezérlõ munkalap nem található.")
-            ;; Everything is valid:
-            t))))))
+  (block amiss
+    (flet ((validate (value fn error-msg)
+             (unless (funcall fn value)
+               (error-message-and-wait error-msg)
+               (return-from amiss nil))))
+      (mapc #'validate
+            (list control-book doc-template outdir)
+            (list #'probe-file2 #'probe-file2 #'probe-directory)
+            (list "A kiválasztott vezérlõ táblázat nem található."
+                  "A kiválasztott dokumentumsablon nem található."
+                  "A kiválasztott kimeneti mappa nem található."))
+      (with-ccom-context
+       (cclet* ((sheets (?'worksheets (get-document control-book)))
+                (sheet  (?'item sheets control-sheet)))
+         (validate sheet #'identity "A kiválasztott vezérlõ munkalap nem található.")
+         ;; Everything is valid:
+         t)))))
 
 
 ;;; Callback fn for START-BUTTON: initialize global vars and run the main fn.
@@ -232,7 +216,7 @@
     capi:column-layout
     '(workbook-pane worksheet-pane out-filename doc-template out-directory pdf-out start-button)))
   (:default-initargs
-   :title "docfctory v0.07"
+   :title "docfctory v0.09"
    :destroy-callback 'exit-program
    :initial-focus 'workbook-pane
    :best-width 450
@@ -248,7 +232,7 @@
 
 ;;; Check if application is registered.
 (defun verify-app-present (app-progid app-name)
-  (with-com-initialized
+  (with-ccom-context
     (handler-case
         (com:create-object :progid app-progid)
       (error (e) (progn
@@ -266,3 +250,7 @@
       (init)
       ;; Start main GUI.
       (capi:display (make-instance 'main))))
+
+
+
+#.(disable-ccom-syntax)

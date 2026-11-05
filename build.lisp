@@ -12,7 +12,7 @@
     :interface :capi
     :console :io
     :multiprocessing t
-    :icon-file "c:\\Users\\cselovszkid\\common-lisp\\docfctory\\Gutenberg.ico"
+    :icon-file "c:\\Users\\cselovszkid\\common-lisp\\docfctory\\img\\Gutenberg.ico"
     :error-on-interpreted-functions t
     :keep-eval t
     :keep-lisp-reader t

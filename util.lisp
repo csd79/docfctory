@@ -2,6 +2,8 @@
                                                                               ;
 
 (in-package #:docfctory)
+#.(enable-ccom-syntax)
+
 
 
 ;; ----------------------------------------------------------------------
@@ -10,13 +12,10 @@
 
 ;;; Extract a list of worksheet names from az Excel workbook.
 (defun list-of-worksheets (filename)
-;  (cclet* ((sheets ?('worksheets (get-document filename)))
-;           (count  ?('count sheets)))
-  (cclet* ((sheets (?worksheets (get-document filename)))
-           (count  (?count sheets)))
+  (cclet* ((sheets (?'worksheets (get-document filename)))
+           (count  (?'count sheets)))
     (loop for i from 1 upto count collecting
-;          ?('name ?('item sheets i)))))
-          (?name (?item sheets i)))))
+          (?'name (?'item sheets i)))))
 
 
 ;;; Extract the device/path part of a full pathname.
@@ -37,3 +36,7 @@
 (defun probe-file2 (pathname)
   (and (probe-directory pathname)
        (pathname-name pathname)))
+
+
+
+#.(disable-ccom-syntax)

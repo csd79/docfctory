@@ -2,6 +2,8 @@
                                                                               ;
 
 (in-package #:docfctory)
+;#.(enable-ccom-syntax)
+
 
 
 ;; ----------------------------------------------------------------------
@@ -64,7 +66,9 @@
     ;; Show progress GUI.
     (capi:display progress-gui)
     ;; Start process.
-    (with-property-accessors
-      (setf (property-accessors-on) t)
-      (docfctory control-book control-sheet filename-column
-                 #'dump-text (progress-bar-changer progress-gui)))))
+    (docfctory control-book control-sheet filename-column
+               #'dump-text (progress-bar-changer progress-gui))))
+
+
+
+;#.(disable-ccom-syntax)
