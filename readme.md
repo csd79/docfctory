@@ -2,7 +2,7 @@
 
 Egyszerű körlevélkészítő
 
-<link>
+![Gootenberg](img/Gutenberg.png){width=160}
 
 A program működéséhez Windows operációs rendszer és a MS Excel és Word alkalmazások megléte szükséges. Tesztelve 64-bites Windows 10 és 11 rendszeren, Office 2016-tal.
 
@@ -18,7 +18,7 @@ Egy oszlop tartalmát több helyre is beszúrhatjuk. A beszúrt szöveg megőrzi
 
 ## Letöltés
 
-<link>
+[legutóbbi verzió](https://github.com/csd79/docfctory/releases/latest)
 
 ## TODO
 

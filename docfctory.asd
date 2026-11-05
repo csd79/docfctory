@@ -1,5 +1,5 @@
 (defsystem "docfctory"
-  :description "Generate documents from control data in an XLSX"
+  :description "Simplistic mail merge utility."
   :author      "Denes Cselovszki <denes.cselovszki@gmail.com>"
   :version     "0.09"
   :depends-on  ("ccom4"
